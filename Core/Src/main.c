@@ -43,17 +43,7 @@
 /* Private variables ---------------------------------------------------------*/
 CRC_HandleTypeDef hcrc;
 
-CRYP_HandleTypeDef hcryp;
-__ALIGN_BEGIN static const uint32_t pKeyCRYP[4] __ALIGN_END = {
-                            0x00000000,0x00000000,0x00000000,0x00000000};
-
-HASH_HandleTypeDef hhash;
-
 IWDG_HandleTypeDef hiwdg;
-
-RNG_HandleTypeDef hrng;
-
-RTC_HandleTypeDef hrtc;
 
 TIM_HandleTypeDef htim10;
 TIM_HandleTypeDef htim11;
@@ -69,12 +59,8 @@ SRAM_HandleTypeDef hsram1;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_RNG_Init(void);
-static void MX_RTC_Init(void);
 static void MX_CRC_Init(void);
 static void MX_FSMC_Init(void);
-static void MX_CRYP_Init(void);
-static void MX_HASH_Init(void);
 static void MX_TIM10_Init(void);
 static void MX_TIM11_Init(void);
 static void MX_TIM13_Init(void);
@@ -118,13 +104,9 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_RNG_Init();
-  MX_RTC_Init();
   MX_CRC_Init();
   MX_FSMC_Init();
   MX_USB_DEVICE_Init();
-  MX_CRYP_Init();
-  MX_HASH_Init();
   MX_TIM10_Init();
   MX_TIM11_Init();
   MX_TIM13_Init();
@@ -162,10 +144,8 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE
-                              |RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
@@ -220,63 +200,6 @@ static void MX_CRC_Init(void)
 }
 
 /**
-  * @brief CRYP Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_CRYP_Init(void)
-{
-
-  /* USER CODE BEGIN CRYP_Init 0 */
-
-  /* USER CODE END CRYP_Init 0 */
-
-  /* USER CODE BEGIN CRYP_Init 1 */
-
-  /* USER CODE END CRYP_Init 1 */
-  hcryp.Instance = CRYP;
-  hcryp.Init.DataType = CRYP_DATATYPE_32B;
-  hcryp.Init.KeySize = CRYP_KEYSIZE_128B;
-  hcryp.Init.pKey = (uint32_t *)pKeyCRYP;
-  hcryp.Init.Algorithm = CRYP_AES_ECB;
-  hcryp.Init.DataWidthUnit = CRYP_DATAWIDTHUNIT_WORD;
-  if (HAL_CRYP_Init(&hcryp) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN CRYP_Init 2 */
-
-  /* USER CODE END CRYP_Init 2 */
-
-}
-
-/**
-  * @brief HASH Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_HASH_Init(void)
-{
-
-  /* USER CODE BEGIN HASH_Init 0 */
-
-  /* USER CODE END HASH_Init 0 */
-
-  /* USER CODE BEGIN HASH_Init 1 */
-
-  /* USER CODE END HASH_Init 1 */
-  hhash.Init.DataType = HASH_DATATYPE_32B;
-  if (HAL_HASH_Init(&hhash) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN HASH_Init 2 */
-
-  /* USER CODE END HASH_Init 2 */
-
-}
-
-/**
   * @brief IWDG Initialization Function
   * @param None
   * @retval None
@@ -301,95 +224,6 @@ static void MX_IWDG_Init(void)
   /* USER CODE BEGIN IWDG_Init 2 */
 
   /* USER CODE END IWDG_Init 2 */
-
-}
-
-/**
-  * @brief RNG Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_RNG_Init(void)
-{
-
-  /* USER CODE BEGIN RNG_Init 0 */
-
-  /* USER CODE END RNG_Init 0 */
-
-  /* USER CODE BEGIN RNG_Init 1 */
-
-  /* USER CODE END RNG_Init 1 */
-  hrng.Instance = RNG;
-  if (HAL_RNG_Init(&hrng) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN RNG_Init 2 */
-
-  /* USER CODE END RNG_Init 2 */
-
-}
-
-/**
-  * @brief RTC Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_RTC_Init(void)
-{
-
-  /* USER CODE BEGIN RTC_Init 0 */
-
-  /* USER CODE END RTC_Init 0 */
-
-  RTC_TimeTypeDef sTime = {0};
-  RTC_DateTypeDef sDate = {0};
-
-  /* USER CODE BEGIN RTC_Init 1 */
-
-  /* USER CODE END RTC_Init 1 */
-
-  /** Initialize RTC Only
-  */
-  hrtc.Instance = RTC;
-  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
-  hrtc.Init.AsynchPrediv = 127;
-  hrtc.Init.SynchPrediv = 255;
-  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
-  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
-  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
-  if (HAL_RTC_Init(&hrtc) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /* USER CODE BEGIN Check_RTC_BKUP */
-
-  /* USER CODE END Check_RTC_BKUP */
-
-  /** Initialize RTC and set the Time and Date
-  */
-  sTime.Hours = 0x0;
-  sTime.Minutes = 0x0;
-  sTime.Seconds = 0x0;
-  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-  sDate.Month = RTC_MONTH_JANUARY;
-  sDate.Date = 0x1;
-  sDate.Year = 0x0;
-
-  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN RTC_Init 2 */
-
-  /* USER CODE END RTC_Init 2 */
 
 }
 
@@ -591,7 +425,6 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
