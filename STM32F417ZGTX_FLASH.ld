@@ -33,6 +33,42 @@
 ******************************************************************************
 */
 
+/*
+===================================================================================
+                       STM32F4 CUSTOM MEMORY MAP ARCHITECTURE
+===================================================================================
+ [REGION]         [ADDRESS RANGE]         [SIZE]     [PURPOSE / TARGET ASSIGNMENT]
+ ----------------------------------------------------------------------------------
+ INTERNAL FLASH:
+  Sector 0        0x0800 0000 - 0x0800 3FFF   16 KB    DFU Bootloader Vector/Init
+  Sector 1        0x0800 4000 - 0x0800 7FFF   16 KB    DFU Bootloader Main Code (32KB)
+  Sector 2        0x0800 8000 - 0x0800 BFFF   16 KB    Configuration Parameters A
+  Sector 3        0x0800 C000 - 0x0800 FFFF   16 KB    Configuration Parameters B
+  Sector 4        0x0801 0000 - 0x0801 FFFF   64 KB    Configuration Parameters C (96KB)
+  Sectors 5-11    0x0802 0000 - 0x080F FFFF  896 KB    User Application Space (20KB+)
+
+ EXTERNAL SYSTEM BUS:
+  FSMC Bank 1     0x6000 0000 - 0x601F FFFF  2048 KB   External Parallel SRAM (2 MB)
+
+===================================================================================
+                       CRITICAL CONFIGURATION ATTENTION REMARKS
+===================================================================================
+ 1. HARDWARE PROTECTION RULES (usbd_dfu_if.c):
+    - Any incoming USB write/erase target address < 0x08020000 MUST be aborted 
+      with USBD_FAIL to preserve the Bootloader (Sectors 0-1) and Parameters (Sectors 2-4).
+    - Address targets between 0x60000000 and 0x601FFFFF must bypass standard internal
+      flash procedures and route directly onto the parallel FSMC lines byte-by-byte.
+
+ 2. USER APPLICATION SETTINGS (Application Project Compiler Hooks):
+    - Application Linker Script must set: FLASH (rx) ORIGIN = 0x08020000
+    - Vector Table Offset (system_stm32f4xx.c) must read: VECT_TAB_OFFSET = 0x00020000U
+
+ 3. RUNTIME MEMORY MAPPING RULES:
+    - External SRAM variables must utilize the (NOLOAD) linker section attribute to
+      prevent the startup code from clearing it before MX_FSMC_Init() fires.
+===================================================================================
+*/
+
 /* Entry Point */
 ENTRY(Reset_Handler)
 
@@ -50,7 +86,12 @@ MEMORY
   BKPSRAM (RWX) : ORIGIN = 0x40024000, LENGTH = 4K
   SRAM (rwx)    : ORIGIN = 0x60000000, LENGTH =   2048k
   
-  FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 64K
+  /* Primary active code execution space (Sectors 0-1) */
+  FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 32K
+  /* Parameter retention sector assignments (Sectors 2-4) */
+  FLASH_PARAM  (r)   : ORIGIN = 0x08008000, LENGTH = 96K
+  /* Main target runtime deployment space (Sectors 5-11) */
+  FLASH_APP    (rx)  : ORIGIN = 0x08020000, LENGTH = 896K
 }
 
 /* Sections */
@@ -232,4 +273,11 @@ SECTIONS
   }
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
+  
+  /* Export anchors for your firmware code to read boundaries */
+  _flash_param_start = ORIGIN(FLASH_PARAM);
+  _flash_param_end   = ORIGIN(FLASH_PARAM) + LENGTH(FLASH_PARAM);
+  
+  _flash_app_start   = ORIGIN(FLASH_APP);
+  _flash_app_end     = ORIGIN(FLASH_APP) + LENGTH(FLASH_APP);
 }

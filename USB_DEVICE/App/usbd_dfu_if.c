@@ -62,8 +62,7 @@
   */
 
 //#define FLASH_DESC_STR      "@Internal Flash   /0x08000000/03*016Ka,01*016Kg,01*064Kg,07*128Kg,04*016Kg,01*064Kg,07*128Kg"
-#define FLASH_DESC_STR      "@Internal Flash   /0x08000000/02*016Kg,02*016Kg,01*064Kg,07*128Kg,04*016Kg,01*064Kg,07*128Kg,@FSMC Memory /0x60000000/2048*001Kg"
-
+#define FLASH_DESC_STR        "@Internal Flash   /0x08000000/02*016Kg,02*016Kg,01*064Kg,07*128Kg,@FSMC Memory /0x60000000/2048*001Kg"
 
 /* USER CODE BEGIN PRIVATE_DEFINES */
 
@@ -107,7 +106,11 @@
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
-
+// Declare the linker symbols at the top of your C file
+extern uint32_t _flash_param_start;
+extern uint32_t _flash_param_end;
+extern uint32_t _flash_app_start;
+extern uint32_t _flash_app_end;
 /* USER CODE END EXPORTED_VARIABLES */
 
 /**
@@ -156,6 +159,13 @@ __ALIGN_BEGIN USBD_DFU_MediaTypeDef USBD_DFU_fops_FS __ALIGN_END =
 uint16_t MEM_If_Init_FS(void)
 {
   /* USER CODE BEGIN 0 */
+  if (HAL_FLASH_Unlock() != HAL_OK)
+  {
+	return (USBD_FAIL);
+  }
+
+  HAL_FLASH_Lock();
+
   return (USBD_OK);
   /* USER CODE END 0 */
 }
@@ -167,6 +177,8 @@ uint16_t MEM_If_Init_FS(void)
 uint16_t MEM_If_DeInit_FS(void)
 {
   /* USER CODE BEGIN 1 */
+  HAL_FLASH_Lock();
+
   return (USBD_OK);
   /* USER CODE END 1 */
 }
