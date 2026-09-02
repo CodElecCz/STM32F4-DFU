@@ -47,7 +47,10 @@ MEMORY
 {
   CCMRAM    (xrw)    : ORIGIN = 0x10000000,   LENGTH = 64K
   RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 128K
-  FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 1024K
+  BKPSRAM (RWX) : ORIGIN = 0x40024000, LENGTH = 4K
+  SRAM (rwx)    : ORIGIN = 0x60000000, LENGTH =   2048k
+  
+  FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 64K
 }
 
 /* Sections */
@@ -169,6 +172,29 @@ SECTIONS
     . = ALIGN(4);
     _eccmram = .;       /* create a global symbol at ccmram end */
   } >CCMRAM AT> FLASH
+  
+  /* Add section for external RAM */
+  .extram (NOLOAD) :
+  {
+  	. = ALIGN(4);
+	_sextram = .;         /* define a global symbol at extram start */
+	*(.extram)
+	*(.extram*)    
+	
+	. = ALIGN(4);
+	_eextram = .;         /* define a global symbol at extram end */	
+  } >SRAM
+  
+  .bkpsram (NOLOAD) :
+  {
+	. = ALIGN(4);
+	_sbkpsram = .;         /* define a global symbol at bckram start */
+	*(.bkpsram);
+	*(.bkpsram*);
+	
+	. = ALIGN(4);
+	_ebkpsram = .;         /* define a global symbol at bckram end */	
+  } > BKPSRAM
 
   /* Uninitialized data section into "RAM" Ram type memory */
   . = ALIGN(4);

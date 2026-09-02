@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "pwm.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -37,6 +37,9 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
+// Macro to create a non-blocking time slot loop
+#define RUN_EVERY_MS(ms_interval, last_tick_var) \
+    for (uint32_t now = HAL_GetTick(); (now - last_tick_var) >= (ms_interval); last_tick_var = now)
 
 /* USER CODE END PM */
 
@@ -111,9 +114,14 @@ int main(void)
   MX_TIM11_Init();
   MX_TIM13_Init();
   MX_TIM14_Init();
+#ifndef DEBUG
   MX_IWDG_Init();
+#endif
   /* USER CODE BEGIN 2 */
-
+  HAL_PWM_WriteRGB(RGB_COLOR_START);
+  HAL_PWM_WritePin(LED_STATE_Pin, GPIO_PIN_RESET);
+  uint32_t last_tick = HAL_GetTick(); // Store the initial timestamp
+  uint8_t led_state = 0; // Variable to track the LED state
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -122,6 +130,16 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
+	  RUN_EVERY_MS(500, last_tick)
+	  {
+		  HAL_PWM_WritePin(LED_STATE_Pin, led_state? GPIO_PIN_RESET : GPIO_PIN_SET);
+		  led_state = !led_state; // Toggle the LED state
+
+#ifndef DEBUG
+		//internal watchdog
+		HAL_IWDG_Refresh(&hiwdg);
+#endif
+	  }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -245,11 +263,11 @@ static void MX_TIM10_Init(void)
 
   /* USER CODE END TIM10_Init 1 */
   htim10.Instance = TIM10;
-  htim10.Init.Prescaler = 0;
+  htim10.Init.Prescaler = 167;
   htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim10.Init.Period = 65535;
+  htim10.Init.Period = 255;
   htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
   {
     Error_Handler();
@@ -260,14 +278,15 @@ static void MX_TIM10_Init(void)
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim10, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM10_Init 2 */
-
+  HAL_TIM_Base_Start(&htim10);
+  HAL_TIM_PWM_Start(&htim10,TIM_CHANNEL_1);
   /* USER CODE END TIM10_Init 2 */
   HAL_TIM_MspPostInit(&htim10);
 
@@ -291,11 +310,11 @@ static void MX_TIM11_Init(void)
 
   /* USER CODE END TIM11_Init 1 */
   htim11.Instance = TIM11;
-  htim11.Init.Prescaler = 0;
+  htim11.Init.Prescaler = 167;
   htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim11.Init.Period = 65535;
+  htim11.Init.Period = 255;
   htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
   {
     Error_Handler();
@@ -306,14 +325,15 @@ static void MX_TIM11_Init(void)
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim11, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM11_Init 2 */
-
+  HAL_TIM_Base_Start(&htim11);
+  HAL_TIM_PWM_Start(&htim11,TIM_CHANNEL_1);
   /* USER CODE END TIM11_Init 2 */
   HAL_TIM_MspPostInit(&htim11);
 
@@ -337,11 +357,11 @@ static void MX_TIM13_Init(void)
 
   /* USER CODE END TIM13_Init 1 */
   htim13.Instance = TIM13;
-  htim13.Init.Prescaler = 0;
+  htim13.Init.Prescaler = 167;
   htim13.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim13.Init.Period = 65535;
+  htim13.Init.Period = 255;
   htim13.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim13.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  htim13.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim13) != HAL_OK)
   {
     Error_Handler();
@@ -352,14 +372,15 @@ static void MX_TIM13_Init(void)
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim13, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM13_Init 2 */
-
+  HAL_TIM_Base_Start(&htim13);
+  HAL_TIM_PWM_Start(&htim13,TIM_CHANNEL_1);
   /* USER CODE END TIM13_Init 2 */
   HAL_TIM_MspPostInit(&htim13);
 
@@ -383,11 +404,11 @@ static void MX_TIM14_Init(void)
 
   /* USER CODE END TIM14_Init 1 */
   htim14.Instance = TIM14;
-  htim14.Init.Prescaler = 0;
+  htim14.Init.Prescaler = 167;
   htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim14.Init.Period = 65535;
+  htim14.Init.Period = 255;
   htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
   {
     Error_Handler();
@@ -398,14 +419,15 @@ static void MX_TIM14_Init(void)
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim14, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM14_Init 2 */
-
+  HAL_TIM_Base_Start(&htim11);
+  HAL_TIM_PWM_Start(&htim11,TIM_CHANNEL_1);
   /* USER CODE END TIM14_Init 2 */
   HAL_TIM_MspPostInit(&htim14);
 
